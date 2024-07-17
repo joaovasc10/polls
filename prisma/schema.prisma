@@ -1,0 +1,54 @@
+// É UMA REPRESENTAÇÃO DO BANCO DE DADOS
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// CRIA UMA TABELA NO BANCO DE DADOS
+model Poll {
+  // gera uma coluna para um ID único do tipo string
+  id String @id @default(uuid())
+
+  // gera o título da enquete
+  title String
+
+  // gera a data de criação da enquete
+  createdAt DateTime @default(now())
+
+  // gera a data de atualização da enquete
+  updatedAt DateTime @default(now())
+
+  // gera um array de opções de enquete
+  options PollOption[]
+  votes   Vote[]
+}
+
+// 1 enquete para N opções
+
+model PollOption {
+  id     String @id @default(uuid())
+  title  String
+  pollId String
+
+  poll  Poll   @relation(fields: [pollId], references: [id])
+  votes Vote[]
+}
+
+model Vote {
+  id           Int      @id @default(autoincrement())
+  sessionId    String // salva o Id pra saber se o usuário já votou
+  pollId       String
+  pollOptionId String
+  createdAt    DateTime @default(now())
+
+  pollOption PollOption @relation(fields: [pollOptionId], references: [id])
+  poll       Poll       @relation(fields: [pollId], references: [id])
+
+  // a combinação dos dois campos deve ser única
+  @@unique([sessionId, pollId])
+}
